@@ -7,13 +7,15 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20")
-        classpath("com.android.tools.build:gradle:7.3.1")
+        val agpVersion = property("agp.version")
+        val kotlinVersion = property("kotlin.version")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("com.android.tools.build:gradle:$agpVersion")
     }
 }
 
-group = "com.godaddy"
-version = "0.5.0"
+group = "com.qawaz"
+version = "0.5.1"
 
 allprojects {
     repositories {

@@ -1,7 +1,9 @@
+import java.util.Properties;
+
 plugins {
     kotlin("multiplatform")
-    id("org.jetbrains.dokka") version "1.7.20"
-    id("org.jetbrains.compose") version "1.2.2"
+//    id("org.jetbrains.dokka")
+    id("org.jetbrains.compose")
     id("com.android.library")
     id("maven-publish")
     id("signing")
@@ -20,7 +22,8 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(compose.runtime)
-                implementation(compose.material)
+                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+                implementation(compose.material3)
                 implementation("com.github.ajalt.colormath:colormath:3.2.0")
             }
         }
@@ -48,7 +51,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.godaddy.common.colorpicker"
+    namespace = "com.qawaz.common.colorpicker"
     compileSdk = 33
     defaultConfig {
         minSdk = 21
@@ -59,21 +62,21 @@ android {
     }
 }
 
-val dokkaOutputDir = buildDir.resolve("dokka")
+//val dokkaOutputDir = buildDir.resolve("dokka")
+//
+//tasks.dokkaHtml.configure {
+//    outputDirectory.set(dokkaOutputDir)
+//}
+//
+//val deleteDokkaOutputDir by tasks.register<Delete>("deleteDokkaOutputDirectory") {
+//    delete(dokkaOutputDir)
+//}
 
-tasks.dokkaHtml.configure {
-    outputDirectory.set(dokkaOutputDir)
-}
-
-val deleteDokkaOutputDir by tasks.register<Delete>("deleteDokkaOutputDirectory") {
-    delete(dokkaOutputDir)
-}
-
-val javadocJar = tasks.register<Jar>("javadocJar") {
-    dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
-    archiveClassifier.set("javadoc")
-    from(dokkaOutputDir)
-}
+//val javadocJar = tasks.register<Jar>("javadocJar") {
+//    dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
+//    archiveClassifier.set("javadoc")
+//    from(dokkaOutputDir)
+//}
 
 val sonatypeUsername: String? = System.getenv("ORG_GRADLE_PROJECT_mavenCentralUsername")
 val sonatypePassword: String? = System.getenv("ORG_GRADLE_PROJECT_mavenCentralPassword")
@@ -100,14 +103,20 @@ signing {
     sign(configurations.archives.get())
     sign(publishing.publications)
 }
+
+
+val propertiesFile = project.rootProject.file("github.properties")
+val isGithubPropAvailable = propertiesFile.exists()
+
+
 publishing {
 
     publications.withType(MavenPublication::class) {
-        groupId = "com.godaddy.android.colorpicker"
+        groupId = "com.qawaz.android.colorpicker"
         artifactId = "compose-color-picker"
         version = "0.6.0"
 
-        artifact(tasks["javadocJar"])
+//        artifact(tasks["javadocJar"])
 
         pom {
 
@@ -144,6 +153,22 @@ publishing {
             credentials {
                 username = sonatypeUsername
                 password = sonatypePassword
+            }
+        }
+        if (isGithubPropAvailable) {
+
+            val githubProperties = Properties().apply { propertiesFile.reader().use { load(it) } }
+
+            maven("https://maven.pkg.github.com/Qawaz/compose-color-picker") {
+                name = "GithubPackages"
+                try {
+                    credentials {
+                        username = (githubProperties["gpr.usr"] ?: System.getenv("GPR_USER")).toString()
+                        password = (githubProperties["gpr.key"] ?: System.getenv("GPR_API_KEY")).toString()
+                    }
+                } catch (ex: Exception) {
+                    ex.printStackTrace()
+                }
             }
         }
     }
