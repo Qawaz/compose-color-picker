@@ -114,7 +114,7 @@ publishing {
     publications.withType(MavenPublication::class) {
         groupId = "com.qawaz.android.colorpicker"
         artifactId = "compose-color-picker"
-        version = "0.6.0"
+        version = "0.6.2"
 
 //        artifact(tasks["javadocJar"])
 
