@@ -9,8 +9,11 @@ plugins {
     id("signing")
 }
 
+group = "com.qawaz.colorpicker"
+version = "0.7.1"
+
 kotlin {
-    android("android") {
+    androidTarget("android") {
         publishLibraryVariants("release")
     }
     jvm()
@@ -24,7 +27,7 @@ kotlin {
                 api(compose.runtime)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.material3)
-                implementation("com.github.ajalt.colormath:colormath:3.2.0")
+                implementation("com.github.ajalt.colormath:colormath:3.3.2")
             }
         }
         val commonTest by getting {
@@ -32,7 +35,7 @@ kotlin {
                 implementation(kotlin("test"))
             }
         }
-        val androidTest by getting {
+        val androidUnitTest by getting {
             dependencies {
                 implementation("junit:junit:4.13.2")
             }
@@ -46,7 +49,7 @@ kotlin {
     }
 
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "11"
+        kotlinOptions.jvmTarget = "17"
     }
 }
 
@@ -57,8 +60,8 @@ android {
         minSdk = 21
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
@@ -78,43 +81,35 @@ android {
 //    from(dokkaOutputDir)
 //}
 
-val sonatypeUsername: String? = System.getenv("ORG_GRADLE_PROJECT_mavenCentralUsername")
-val sonatypePassword: String? = System.getenv("ORG_GRADLE_PROJECT_mavenCentralPassword")
+//val sonatypeUsername: String? = System.getenv("ORG_GRADLE_PROJECT_mavenCentralUsername")
+//val sonatypePassword: String? = System.getenv("ORG_GRADLE_PROJECT_mavenCentralPassword")
 
 
-afterEvaluate {
-    configure<PublishingExtension> {
-        publications.all {
-            val mavenPublication = this as? MavenPublication
+//afterEvaluate {
+//    configure<PublishingExtension> {
+//        publications.all {
+//            val mavenPublication = this as? MavenPublication
+//
+//            mavenPublication?.artifactId =
+//                "compose-color-picker${
+//                    "-$name".takeUnless { "kotlinMultiplatform" in name }.orEmpty()
+//                }".removeSuffix("Release")
+//        }
+//    }
+//}
 
-            mavenPublication?.artifactId =
-                "compose-color-picker${
-                    "-$name".takeUnless { "kotlinMultiplatform" in name }.orEmpty()
-                }".removeSuffix("Release")
-        }
-    }
-}
-
-signing {
-    setRequired {
-        // signing is only required if the artifacts are to be published
-        gradle.taskGraph.allTasks.any { PublishToMavenRepository::class == it.javaClass }
-    }
-    sign(configurations.archives.get())
-    sign(publishing.publications)
-}
-
-
-val propertiesFile = project.rootProject.file("github.properties")
-val isGithubPropAvailable = propertiesFile.exists()
-
+//signing {
+//    setRequired {
+//        // signing is only required if the artifacts are to be published
+//        gradle.taskGraph.allTasks.any { PublishToMavenRepository::class == it.javaClass }
+//    }
+//    sign(configurations.archives.get())
+//    sign(publishing.publications)
+//}
 
 publishing {
 
     publications.withType(MavenPublication::class) {
-        groupId = "com.qawaz.android.colorpicker"
-        artifactId = "compose-color-picker"
-        version = "0.6.2"
 
 //        artifact(tasks["javadocJar"])
 
@@ -148,27 +143,23 @@ publishing {
     }
 
     repositories {
-        maven {
-            setUrl("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = sonatypeUsername
-                password = sonatypePassword
-            }
-        }
-        if (isGithubPropAvailable) {
+//        maven {
+//            setUrl("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+//            credentials {
+//                username = sonatypeUsername
+//                password = sonatypePassword
+//            }
+//        }
 
-            val githubProperties = Properties().apply { propertiesFile.reader().use { load(it) } }
-
-            maven("https://maven.pkg.github.com/Qawaz/compose-color-picker") {
-                name = "GithubPackages"
-                try {
-                    credentials {
-                        username = (githubProperties["gpr.usr"] ?: System.getenv("GPR_USER")).toString()
-                        password = (githubProperties["gpr.key"] ?: System.getenv("GPR_API_KEY")).toString()
-                    }
-                } catch (ex: Exception) {
-                    ex.printStackTrace()
+        maven("https://maven.pkg.github.com/Qawaz/compose-color-picker") {
+            name = "GithubPackages"
+            try {
+                credentials {
+                    username = (System.getenv("GPR_USER")).toString()
+                    password = (System.getenv("GPR_API_KEY")).toString()
                 }
+            } catch (ex: Exception) {
+                ex.printStackTrace()
             }
         }
     }
